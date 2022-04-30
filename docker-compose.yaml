@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  nodejs:
+    build:
+      context: ./
+      target: production
+    volumes:
+      - .:/app
+    command: npm start
+    ports:
+      - '1883:1883'
+    environment:
+      ATEM_ADDRESS: '192.168.0.49'
