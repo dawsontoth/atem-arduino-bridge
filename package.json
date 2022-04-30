@@ -18,8 +18,10 @@
   },
   "scripts": {
     "docker:up": "docker-compose up",
+    "docker:up:detach:remote": "DOCKER_CONTEXT=remote docker-compose up -d",
     "docker:up:detach": "docker-compose up -d",
     "docker:down": "docker-compose down",
+    "docker:down:remote": "DOCKER_CONTEXT=remote docker-compose down",
     "lint": "gts lint",
     "clean": "gts clean",
     "build": "tsc",
