@@ -1,30 +1,32 @@
 import { Atem, AtemState } from 'atem-connection';
-import { atemAddress } from './env';
+import { atemAddress, overrideState } from './env';
 import { broadcast, subscribe } from './mqtt-client';
 
 const myATEM = new Atem();
 
-let latestState = 'm:Connecting...';
+let latestState = overrideState || 'm:Connecting...';
 
 export async function connectATEM() {
-  myATEM.on('info', e => {
-    if (e === 'reconnect') {
-      latestState = 'mRetrying...';
+  if (!overrideState) {
+    myATEM.on('info', e => {
+      if (e === 'reconnect') {
+        latestState = 'mRetrying...';
+        broadcastLatestState();
+      } else {
+        console.log('info', e);
+      }
+    });
+    myATEM.on('error', e => {
+      latestState = 'mError';
+      console.log('error', e);
+    });
+    myATEM.on('disconnected', () => {
+      latestState = 'mDisconnected';
       broadcastLatestState();
-    } else {
-      console.log('info', e);
-    }
-  });
-  myATEM.on('error', e => {
-    latestState = 'mError';
-    console.log('error', e);
-  });
-  myATEM.on('disconnected', () => {
-    latestState = 'mDisconnected';
-    broadcastLatestState();
-  });
-  myATEM.on('connected', () => processStateUpdate(myATEM.state));
-  myATEM.on('stateChanged', (state: AtemState) => processStateUpdate(state));
+    });
+    myATEM.on('connected', () => processStateUpdate(myATEM.state));
+    myATEM.on('stateChanged', (state: AtemState) => processStateUpdate(state));
+  }
 
   subscribe('auto-transition', autoTransition);
   subscribe('change-program-input', changeProgramInput);
@@ -32,7 +34,9 @@ export async function connectATEM() {
   subscribe('request-atem-state', broadcastLatestState);
   subscribe('run-macro', runMacro);
 
-  await myATEM.connect(atemAddress);
+  if (!overrideState) {
+    await myATEM.connect(atemAddress);
+  }
 }
 
 function broadcastLatestState() {
@@ -54,10 +58,17 @@ async function runMacro(message: Buffer) {
 }
 
 async function cut(message: Buffer) {
-  const [me] = String(message)
-    .split(',')
-    .map(i => parseInt(i.trim()));
-  await myATEM.cut(me);
+  if (overrideState) {
+    const split = latestState.split(',');
+    split.unshift(split.pop() as string);
+    latestState = split.join(',');
+    broadcastLatestState();
+  } else {
+    const [me] = String(message)
+      .split(',')
+      .map(i => parseInt(i.trim()));
+    await myATEM.cut(me);
+  }
 }
 
 async function autoTransition(message: Buffer) {
