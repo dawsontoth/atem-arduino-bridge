@@ -1,11 +1,11 @@
-FROM node:14.19.1 AS base
+FROM node:14.19.1 AS dependencies
 WORKDIR /app
+COPY package*.json ./
+RUN npm ci
 
-COPY package*.json /
-RUN npm install --frozen-lock-file --quiet
-
-FROM base as production
-COPY . .
+FROM dependencies as production
+WORKDIR /app
+COPY src ./src
+COPY tsconfig.json ./tsconfig.json
 RUN npm run build
-RUN npm install --only=prod --frozen-lock-file --quiet
-CMD [ "npm", "start" ]
+CMD [ "node", "build", "index.js" ]
