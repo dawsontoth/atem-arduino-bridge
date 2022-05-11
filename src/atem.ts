@@ -69,10 +69,10 @@ async function autoTransition(message: Buffer) {
 
 function processStateUpdate(state?: AtemState) {
   latestState = [
-    (state?.video.mixEffects[0]?.previewInput || 1) - 1,
-    (state?.video.mixEffects[0]?.programInput || 1) - 1,
-    (state?.video.mixEffects[1]?.previewInput || 1) - 1,
-    (state?.video.mixEffects[1]?.programInput || 1) - 1,
+    (state?.video.mixEffects[0]?.previewInput || 1),
+    (state?.video.mixEffects[0]?.programInput || 1),
+    (state?.video.mixEffects[1]?.previewInput || 1),
+    (state?.video.mixEffects[1]?.programInput || 1),
   ].join(',');
   broadcastLatestState();
 }
